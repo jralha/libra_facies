@@ -1,36 +1,38 @@
 #%%
-# from utils.datautils import merge_las, get_curves
+from utils.datautils import merge_las
 import glob
 import lasio
 from tqdm.auto import tqdm
 import pandas as pd
 import numpy as np
-#%%
+from utils import datautils
+import random
+#%% Load Data
 LASFOLDER = "data\\north_sea\\"
 lasfiles = glob.glob(LASFOLDER+"*.las")
 
-def merge_las(lasfiles,labels,columns=None):
+# Merge all las files into a single dataframe.
+# Function drops all samples where there isn't a facies label
+# Function also drops all rows with all NaN values.
+merged = datautils.merge_las(lasfiles,labels=['LITHOLOGY_GEOLINK'])
 
-    dfs=[]
-    for n in tqdm(range(len(lasfiles))[50:55]):
-        las = lasio.read(lasfiles[n])
-        df = las.df()
-        df = df.dropna(subset=labels)
-        df = df.dropna(axis=1,how='all')
-        # df = df.apply(lambda x: x.fillna(x.median()),axis=0)
-        dfs.append(df)
-        df['wellName'] = lasfiles[n].split('\\')[-1].split('.')[0]
+# %% Check lenght of each column to check data availability
+col_count = merged.count()
 
-    merged = pd.concat(dfs,axis=0,join="outer")
+# %%Select columns for data output
+cols = ['wellName','LITHOLOGY_GEOLINK','DTC','GR','RHOB','NPHI','RDEP','RMED','SP']
 
-    for column in merged.columns:
-        l0 = len(merged[column])
-        l1 = np.sum(merged[column].isnull().values)
-        if l1/l0 > 0.1:
-            merged.drop([column],axis=1)
+data = merged[cols]
+data = data.dropna()
 
-    return merged
+wells = np.unique(data['wellName'])
+n_wells = len(wells)
+val_size = 0.2
+n_val_wells = int(np.ceil(val_size*n_wells))
 
-test = merge_las(lasfiles,['LITHOLOGY_GEOLINK'])
+val_wells = random.choices(wells,k=n_val_wells)
+
+val = data[data['wellName'].isin(val_wells)]
+train = data[~(data['wellName'].isin(val_wells))]
 
 # %%
