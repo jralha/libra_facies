@@ -1,52 +1,71 @@
 import tensorflow as tf
+from sklearn.model_selection import train_test_split
 
 
-def single_folder(data_dir,IMG_HEIGHT,IMG_WIDTH,BATCH_SIZE,class_names,save_aug_imgs=None,seed=123):
+def from_dataframe(df,BATCH_SIZE=128,lenght=1,sampling_rate=1,stride=1,val_split=0.2,header_cols=1,seed=123):
 
+    target_col = 0+header_cols
+    start_feats = target_col+1
+    data=df.iloc[:,start_feats:].values
+    targets=df.iloc[:,target_col].values
 
-    #Class names needs to be a list with class names.
+    X_train, X_test, y_train, y_test = train_test_split(
+        X=data,
+        y=targets,
+        test_size=0.2,
+        random_state=seed,
+        stratify=targets 
+    )
 
-
-    image_generator = tf.keras.preprocessing.image.ImageDataGenerator(
-        rescale=(1./255),
-        fill_mode='reflect',
-        horizontal_flip=True,
-        vertical_flip=True,
-        validation_split=0.2,
-        # width_shift_range = 0.1,
-        # height_shift_range = 0.1,
-        # zoom_range = 0.1,
-        # rotation_range = 10
-        )
-
-    if save_aug_imgs != None:
-        aug_train = 'dataset\\aug\\train'
-        aug_val = 'dataset\\aug\\val'
-    else:
-        aug_train = None
-        aug_val = None
-
-
-    train_data_gen = image_generator.flow_from_directory(
-        directory=data_dir,
+    ts_gen_train = tf.keras.preprocessing.sequence.TimeSeriesGenerator(
+        data=X_train,
+        targets=y_train,
         batch_size=BATCH_SIZE,
-        shuffle=True,
-        target_size=(IMG_HEIGHT, IMG_WIDTH),
-        classes = class_names,
-        subset ='training',
-        save_to_dir=aug_train,
-        seed=seed
-        )
+        lenght=lenght,
+        sampling_rate=sampling_rate,
+        stride=stride
+    )
 
-    val_data_gen = image_generator.flow_from_directory(
-        directory=data_dir,
+    ts_gen_val = tf.keras.preprocessing.sequence.TimeSeriesGenerator(
+        data=X_test,
+        targets=y_test,
         batch_size=BATCH_SIZE,
-        shuffle=True,
-        target_size=(IMG_HEIGHT, IMG_WIDTH),
-        classes = class_names,
-        subset ='validation',
-        save_to_dir=aug_val,
-        seed=seed
-        )
+        lenght=lenght,
+        sampling_rate=sampling_rate,
+        stride=stride
+    )
 
-    return train_data_gen, val_data_gen
+    return ts_gen_train, ts_gen_val
+
+def from_aray(arr,targets,BATCH_SIZE=128,lenght=1,sampling_rate=1,stride=1,val_split=0.2,seed=123)
+
+    data=arr
+    targets=targets
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X=data,
+        y=targets,
+        test_size=0.2,
+        random_state=seed,
+        stratify=targets 
+    )
+
+    ts_gen_train = tf.keras.preprocessing.sequence.TimeSeriesGenerator(
+        data=X_train,
+        targets=y_train,
+        batch_size=BATCH_SIZE,
+        lenght=lenght,
+        sampling_rate=sampling_rate,
+        stride=stride
+    )
+
+    ts_gen_val = tf.keras.preprocessing.sequence.TimeSeriesGenerator(
+        data=X_test,
+        targets=y_test,
+        batch_size=BATCH_SIZE,
+        lenght=lenght,
+        sampling_rate=sampling_rate,
+        stride=stride
+    )
+
+    return ts_gen_train, ts_gen_val

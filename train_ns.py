@@ -6,6 +6,7 @@ import glob
 import random
 import numpy as np
 import datetime
+import pandas as pd
 from utils import make_gen
 from utils import define_model
 import argparse
@@ -24,26 +25,28 @@ parser.add_argument('--model_file', type=str, default=None)
 parser.add_argument('--optimizer', type=str, default='adam')
 
 parser.add_argument('--run_name', type=str, required=True)
-parser.add_argument('--model', type=str, default=None)
-parser.add_argument('--data_dir', type=str, required=True)
+parser.add_argument('--model', type=str, default='1dcnn')
+parser.add_argument('--datafile', type=str, required=True)
+parser.add_argument('--labels', type=str, required=True)
 args = parser.parse_args()
 
 #%% Setting path to dataset and dataset properties.
 ##########################################################
 checks = args.checkpoints_dir+"\\"
-data_dir = os.path.join(args.data_dir)
-image_list = list(glob.glob(data_dir+'*/*.jpg'))
-image_count = len(image_list)
+data_file_path = os.path.join(args.datafile)
+labels = args.labels
 
-classes = [item.split('\\')[-2] for item in image_list]
-class_names = list(np.unique(classes))
+data_file = pd.read_csv(data_file_path)
+sample_count = len(data_file)
+class_names = np.unique(data_file[target])
+features = data_file.columns[2:]
 
 #%% Training parameters.
 ########################################
 RUN_NAME = args.run_name
 CONTINUE = args.continue_training
 BATCH_SIZE = args.batch_size
-STEPS_PER_EPOCH = np.ceil(image_count/BATCH_SIZE)
+STEPS_PER_EPOCH = np.ceil(sample_count/BATCH_SIZE)
 epochs = args.epoch_count
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -51,18 +54,18 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 #########################################
 
 seed = random.randint(1,999)
-gens = make_gen.single_folder(data_dir=data_dir,IMG_HEIGHT=IMG_HEIGHT,IMG_WIDTH=IMG_WIDTH,BATCH_SIZE=BATCH_SIZE,class_names=class_names, seed=seed )
+gens = make_gen.from_dataframe(data_file,BATCH_SIZE=BATCH_SIZE)
 train_data_gen = gens[0]
 val_data_gen = gens[1]
 
 if CONTINUE == False:
     FIRST_EPOCH = 1
-    if args.model == 'resnet':
-        model = define_model.resnet_model(len(class_names),shape)
-    elif args.model == 'vgg':
-        model = define_model.vgg_model(len(class_names),shape)
-    else:
-        model = define_model.cnn_shallow(len(class_names),shape)
+    if args.model == '1dcnn':
+        model = define_model.cnn_1d_classifier(len(class_names),len(features),1)
+    # elif args.model == 'vgg':
+    #     model = define_model.vgg_model(len(class_names),shape)
+    # else:
+    #     model = define_model.cnn_shallow(len(class_names),shape)
     
 elif CONTINUE == True:
     modelfile = args.model_file

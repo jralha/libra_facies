@@ -1,13 +1,13 @@
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 
-def cnn_1d_classifier(num_classes,num_feats,loss=None,n_convs=2):
+def cnn_1d_classifier(num_classes,num_feats,lenght,n_convs=2):
     
     from tensorflow.keras.layers import Input, Conv1D, Activation, MaxPooling1D, Flatten, Dropout
     from tensorflow.keras.losses import MeanAbsolutePercentageError()
 
     model = Sequential()
-    model.add(Input(shape=(1,num_feats)))
+    model.add(Input(shape=(lenght,num_feats)))
     n_conv = n_convs
     act = 'relu'
     for i in range(n_conv):
@@ -18,16 +18,5 @@ def cnn_1d_classifier(num_classes,num_feats,loss=None,n_convs=2):
     model.add(Dropout(0.5))
     model.add(Dense(num_classes))
     model.add(Activation('logistic'))
-
-    if loss == None:
-        loss = tf.keras.losses.MeanAbsolutePercentageError()
-    else:
-        loss = loss
-
-    model.compile(
-    loss=loss,
-    optimizer=tf.keras.optimizers.Adam(),
-    metrics=['mae']
-    )
 
     return model

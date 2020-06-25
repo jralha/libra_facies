@@ -20,6 +20,7 @@ merged = datautils.merge_las(lasfiles,labels=['LITHOLOGY_GEOLINK'])
 col_count = merged.count()
 
 # %%Select columns for data output
+# wellName and Lithology should always be the first two columns
 cols = ['wellName','LITHOLOGY_GEOLINK','DTC','GR','RHOB','NPHI','RDEP','RMED','SP']
 
 data = merged[cols]
@@ -34,5 +35,8 @@ val_wells = random.choices(wells,k=n_val_wells)
 
 val = data[data['wellName'].isin(val_wells)]
 train = data[~(data['wellName'].isin(val_wells))]
+
+val.to_csv(LASFOLDER+'val.csv')
+train.to_csv(LASFOLDER+'train.csv')
 
 # %%
