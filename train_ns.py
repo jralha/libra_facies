@@ -84,8 +84,7 @@ model.compile(
 
 #%%Callbacks
 #########################################
-val_acc = '{val_accuracy}'
-filepath_best=checks+RUN_NAME+"-{epoch}-"+val_acc+".hdf5"
+filepath_best=checks+RUN_NAME+"-{epoch}"+".hdf5"
 
 ckp_best=tf.keras.callbacks.ModelCheckpoint(filepath_best,
     monitor='val_accuracy',
