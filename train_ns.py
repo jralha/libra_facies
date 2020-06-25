@@ -38,8 +38,8 @@ labels = args.labels
 
 data_file = pd.read_csv(data_file_path)
 sample_count = len(data_file)
-class_names = np.unique(data_file[target])
-features = data_file.columns[2:]
+class_names = np.unique(data_file[labels])
+features = data_file.columns[3:]
 
 #%% Training parameters.
 ########################################
@@ -77,7 +77,7 @@ else:
 
 model.compile(
     optimizer=args.optimizer,
-    loss=tf.keras.losses.CategoricalCrossentropy(),
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
     metrics=["accuracy"]
     )
 

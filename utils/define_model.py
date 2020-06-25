@@ -3,8 +3,8 @@ from tensorflow.keras.models import Sequential
 
 def cnn_1d_classifier(num_classes,num_feats,lenght,n_convs=2):
     
-    from tensorflow.keras.layers import Input, Conv1D, Activation, MaxPooling1D, Flatten, Dropout
-    from tensorflow.keras.losses import MeanAbsolutePercentageError()
+    from tensorflow.keras.layers import Input, Conv1D, Activation, MaxPooling1D, Flatten, Dropout, Dense
+    from tensorflow.keras.losses import MeanAbsolutePercentageError
 
     model = Sequential()
     model.add(Input(shape=(lenght,num_feats)))
@@ -17,6 +17,6 @@ def cnn_1d_classifier(num_classes,num_feats,lenght,n_convs=2):
     model.add(Flatten())
     model.add(Dropout(0.5))
     model.add(Dense(num_classes))
-    model.add(Activation('logistic'))
+    model.add(Activation('softmax'))
 
     return model
