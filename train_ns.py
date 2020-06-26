@@ -21,7 +21,7 @@ if 'ipykernel' not in sys.argv[0]:
     parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints')
     parser.add_argument('--logs_dir', type=str, default='./logs')
     parser.add_argument('--format', type=str, default='las')
-    parser.add_argument('--batch_size', type=int, default=10)
+    parser.add_argument('--batch_size', type=int, default=1000)
     parser.add_argument('--epoch_count', type=int, default=1500)
     parser.add_argument('--init_epoch', type=int, default=0)
     parser.add_argument('--model_file', type=str, default=None)
@@ -41,14 +41,14 @@ else:
             self.checkpoints_dir = './checkpoints'
             self.log_dir = './logs'
             self.format = 'las'
-            self.batch_size=10
+            self.batch_size=1000
             self.epoch_count=1500
             self.init_epoch=0
             self.model_file=None
             self.optimizer='adam'
             self.window_size=1
             self.run_name='test0'
-            self.model='xgb'
+            self.model='resnet'
             self.datafile='./data/north_sea/train.csv'
             self.labels='LITHOLOGY_GEOLINK'
     args = Args()
@@ -90,6 +90,10 @@ if CONTINUE == False:
         model = define_model.cnn_1d_classifier(len(class_names),len(features),window_size,n_convs=2)
     elif args.model == 'xgb':
         model = define_model.xgb_cv_model(verbose=1)
+    elif args.model == 'lstm':
+        model = define_model.lstm_model(len(class_names),len(features),window_size)
+    elif args.model == 'resnet':
+        model = define_model.resnet_1d(len(features),window_size,64,len(class_names))
     # else:
     #     model = define_model.cnn_shallow(len(class_names),shape)
     
@@ -123,7 +127,7 @@ if args.model != 'xgb':
         )
 
     #Log model history in csv
-    logfile=RUN_NAME+'.csv'
+    logfile='\\'+RUN_NAME+'.csv'
     csv_log=tf.keras.callbacks.CSVLogger(filename=log_dir+logfile)
 
     #Early stopping

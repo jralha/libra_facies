@@ -1,13 +1,13 @@
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import LabelEncoder
 
 
 def from_dataframe(df,BATCH_SIZE=128,length=1,sampling_rate=1,stride=1,val_split=0.2,header_cols=2,seed=123):
 
     scaler = MinMaxScaler()
-    encoder = OrdinalEncoder()
+    encoder = LabelEncoder()
 
     target_col = header_cols
     start_feats = target_col+1
@@ -49,7 +49,7 @@ def from_dataframe(df,BATCH_SIZE=128,length=1,sampling_rate=1,stride=1,val_split
 def from_aray(arr,targets,BATCH_SIZE=128,length=1,sampling_rate=1,stride=1,val_split=0.2,seed=123):
 
     scaler = MinMaxScaler()
-    encoder = OrdinalEncoder()
+    encoder = LabelEncoder()
     
     data=arr
     targets=targets.reshape(-1,1)
