@@ -140,10 +140,10 @@ if args.model != 'xgb':
         monitor='val_loss', min_delta=0,patience=10
     )
 
-    # Metrics logging
-    metrics = postutils.Metrics(val_data=val_data_gen,batch_size=BATCH_SIZE)
+    # Metrics logging, still unstable, takes too long on small batch sizes
+    # metrics = postutils.Metrics(val_data=val_data_gen,batch_size=BATCH_SIZE)
 
-    callbacks_list = [ckp_best,csv_log,metrics]
+    callbacks_list = [ckp_best,csv_log]
 
     #Train or resume training
     model.fit_generator(
