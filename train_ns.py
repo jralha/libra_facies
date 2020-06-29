@@ -9,6 +9,7 @@ import datetime
 import pandas as pd
 from utils import make_gen
 from utils import define_model
+from utils import postutils
 import argparse
 import xgboost as xgb
 from sklearn.metrics import log_loss, precision_score, recall_score
@@ -21,7 +22,8 @@ if 'ipykernel' not in sys.argv[0]:
     parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints')
     parser.add_argument('--logs_dir', type=str, default='./logs')
     parser.add_argument('--format', type=str, default='las')
-    parser.add_argument('--batch_size', type=int, default=1000)
+    parser.add_argument('--batch_size', type=int, default=10)
+    parser.add_argument('--steps', type=int, default=None)
     parser.add_argument('--epoch_count', type=int, default=1500)
     parser.add_argument('--init_epoch', type=int, default=0)
     parser.add_argument('--model_file', type=str, default=None)
@@ -33,30 +35,30 @@ if 'ipykernel' not in sys.argv[0]:
     parser.add_argument('--datafile', type=str, required=True)
     parser.add_argument('--labels', type=str, required=True)
     args = parser.parse_args()
-else:
-    class Args():
-        def __init__(self):
-            self.gpu_ids = '-1'
-            self.continue_training = False
-            self.checkpoints_dir = './checkpoints'
-            self.log_dir = './logs'
-            self.format = 'las'
-            self.batch_size=1000
-            self.epoch_count=1500
-            self.init_epoch=0
-            self.model_file=None
-            self.optimizer='adam'
-            self.window_size=1
-            self.run_name='test0'
-            self.model='resnet'
-            self.datafile='./data/north_sea/train.csv'
-            self.labels='LITHOLOGY_GEOLINK'
-    args = Args()
+# else:
+#     class Args():
+#         def __init__(self):
+#             self.gpu_ids = '-1'
+#             self.continue_training = False
+#             self.checkpoints_dir = './checkpoints'
+#             self.log_dir = './logs'
+#             self.format = 'las'
+#             self.batch_size=1000
+#             self.epoch_count=1500
+#             self.init_epoch=0
+#             self.model_file=None
+#             self.optimizer='adam'
+#             self.window_size=1
+#             self.run_name='test0'
+#             self.model='resnet'
+#             self.datafile='./data/north_sea/train.csv'
+#             self.labels='LITHOLOGY_GEOLINK'
+#     args = Args()
 
 #%% Setting path to dataset and dataset properties.
 ##########################################################
 checks = args.checkpoints_dir+"\\"
-log_dir = args.log_dir
+log_dir = args.logs_dir+"\\"
 data_file_path = os.path.join(args.datafile)
 labels = args.labels
 
@@ -70,7 +72,10 @@ features = data_file.columns[3:]
 RUN_NAME = args.run_name
 CONTINUE = args.continue_training
 BATCH_SIZE = args.batch_size
-STEPS_PER_EPOCH = np.ceil(sample_count/BATCH_SIZE)
+if args.steps == None:
+    STEPS_PER_EPOCH = np.ceil((sample_count/BATCH_SIZE)*0.01)
+else:
+    STEPS_PER_EPOCH = args.steps
 epochs = args.epoch_count
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 window_size = args.window_size
@@ -111,7 +116,7 @@ if args.model != 'xgb':
     model.compile(
         optimizer=args.optimizer,
         loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-        metrics=["accuracy"]
+        metrics=['accuracy']
         )
 
     #Callbacks
@@ -127,7 +132,7 @@ if args.model != 'xgb':
         )
 
     #Log model history in csv
-    logfile='\\'+RUN_NAME+'.csv'
+    logfile=RUN_NAME+'.csv'
     csv_log=tf.keras.callbacks.CSVLogger(filename=log_dir+logfile)
 
     #Early stopping
@@ -135,7 +140,10 @@ if args.model != 'xgb':
         monitor='val_loss', min_delta=0,patience=10
     )
 
-    callbacks_list = [ckp_best,csv_log]
+    # Metrics logging
+    metrics = postutils.Metrics(val_data=val_data_gen,batch_size=BATCH_SIZE)
+
+    callbacks_list = [ckp_best,csv_log,metrics]
 
     #Train or resume training
     model.fit_generator(
@@ -148,11 +156,13 @@ if args.model != 'xgb':
         initial_epoch=FIRST_EPOCH
         )
 
+
+
 # %%Eval XGB
 if args.model == 'xgb':
-    # model.fit(train_data_gen.data,train_data_gen.targets)
-    # pred = model.predict(val_data_gen.data)
-    # pred_proba = model.predict_proba(val_data_gen.data)
+    model.fit(train_data_gen.data,train_data_gen.targets)
+    pred = model.predict(val_data_gen.data)
+    pred_proba = model.predict_proba(val_data_gen.data)
     logloss = log_loss(val_data_gen.targets,pred_proba)
     prec = precision_score(val_data_gen.targets,pred,average='macro')
     rec = recall_score(val_data_gen.targets,pred,average='macro')
