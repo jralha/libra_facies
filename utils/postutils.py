@@ -2,6 +2,8 @@ import numpy as np
 from tensorflow.keras.callbacks import Callback
 from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
 
+# Keras callback that returns mean recall, precision and f1 score per epoch.
+#Takes too long right now, don't use.
 class Metrics(Callback):
 
     def __init__(self, val_data, batch_size):

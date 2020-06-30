@@ -6,24 +6,27 @@ from tensorflow.keras.layers import Flatten, Dropout, Dense, LSTM
 from tensorflow.keras.layers import Conv1D, BatchNormalization
 from tensorflow.keras.losses import MeanAbsolutePercentageError
 
+# Fetches the model from the models class with the correct arguments.
 def build_model(name,num_classes,num_feats,length,**kwargs):
     o = models(num_classes,num_feats,length,**kwargs)
     model = get_model(o,name)
     return model
 
-def get_model(o,name):
-    return getattr(o, name)()
+# Given a name, fetches the model
+def get_model(obj,name):
+    return getattr(obj, name)()
 
+# Class containing the models
 class models():
 
-    def __init__(self,num_classes,num_feats,length,**kwargs):
+    def __init__(self,num_classes=None,num_feats=None,length=None,**kwargs):
         self.num_feats = num_feats
         self.length = length
         self.num_classes = num_classes
         for key,value in kwargs.items():
             setattr(self, key, value)
         
-
+    #1D basic CNN
     def cnn1d(self):
         try:
             n_conv = self.n_conv
@@ -47,6 +50,7 @@ class models():
 
         return model
 
+    #LSTM network
     def lstm(self):
         length = self.length
         num_feats = self.num_feats
@@ -59,6 +63,7 @@ class models():
 
         return model
 
+    #Standard MLP with 3 hidden layers, each 100 neurons
     def mlp(self):
         length = self.length
         num_feats = self.num_feats
@@ -73,7 +78,7 @@ class models():
 
         return model
 
-
+    #1D implementation of a Resnet
     def resnet1d(self):
         try:
             n_feature_maps = self.n_feature_maps
@@ -155,6 +160,7 @@ class models():
 
         return model
 
+    #XGB model, doesn't use the length, num_classes and num_feats arguments
     def xgb(params=None,cv=2,verbose=0):
         import xgboost as xgb
         from sklearn.model_selection import GridSearchCV

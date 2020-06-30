@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
 
+# Get all las files in a folder and merge them into a single dataframe, also adds a columns with the well name.
 def merge_las(lasfiles,labels=None,columns=None):
 
 

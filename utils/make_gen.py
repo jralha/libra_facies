@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import LabelEncoder
 
-
+#Process dataframe into a Keras Time Series Generator
 def from_dataframe(df,BATCH_SIZE=128,length=1,sampling_rate=1,stride=1,val_split=0.2,header_cols=2,seed=123):
 
     scaler = MinMaxScaler()
@@ -46,6 +46,7 @@ def from_dataframe(df,BATCH_SIZE=128,length=1,sampling_rate=1,stride=1,val_split
 
     return ts_gen_train, ts_gen_val
 
+# Process array into a Keras Time Series Generator
 def from_aray(arr,targets,BATCH_SIZE=128,length=1,sampling_rate=1,stride=1,val_split=0.2,seed=123):
 
     scaler = MinMaxScaler()

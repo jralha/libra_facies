@@ -15,6 +15,7 @@ import xgboost as xgb
 from sklearn.metrics import log_loss, precision_score, recall_score
 
 #%%Parsing args
+#Parser when run on command line
 if 'ipykernel' not in sys.argv[0]:
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu_ids', type=str, default='-1')
@@ -36,6 +37,7 @@ if 'ipykernel' not in sys.argv[0]:
     parser.add_argument('--labels', type=str, required=True)
     args = parser.parse_args()
 else:
+    # Set default options when using Jupyter
     class Args():
         def __init__(self):
             self.gpu_ids = '-1'
@@ -132,7 +134,7 @@ if args.model != 'xgb':
     logfile=RUN_NAME+'.csv'
     csv_log=tf.keras.callbacks.CSVLogger(filename=log_dir+logfile)
 
-    #Early stopping
+    #Early stopping, not using right now
     earlystopping=tf.keras.callbacks.EarlyStopping(
         monitor='val_loss', min_delta=0,patience=10
     )
@@ -157,7 +159,7 @@ if args.model != 'xgb':
 
 
 
-# %%Eval XGB
+# %% XGB model, still needs a way to save results
 if args.model == 'xgb':
     model.fit(train_data_gen.data,train_data_gen.targets)
     pred = model.predict(val_data_gen.data)
