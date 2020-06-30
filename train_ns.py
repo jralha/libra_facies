@@ -35,25 +35,26 @@ if 'ipykernel' not in sys.argv[0]:
     parser.add_argument('--datafile', type=str, required=True)
     parser.add_argument('--labels', type=str, required=True)
     args = parser.parse_args()
-# else:
-#     class Args():
-#         def __init__(self):
-#             self.gpu_ids = '-1'
-#             self.continue_training = False
-#             self.checkpoints_dir = './checkpoints'
-#             self.log_dir = './logs'
-#             self.format = 'las'
-#             self.batch_size=1000
-#             self.epoch_count=1500
-#             self.init_epoch=0
-#             self.model_file=None
-#             self.optimizer='adam'
-#             self.window_size=1
-#             self.run_name='test0'
-#             self.model='resnet'
-#             self.datafile='./data/north_sea/train.csv'
-#             self.labels='LITHOLOGY_GEOLINK'
-#     args = Args()
+else:
+    class Args():
+        def __init__(self):
+            self.gpu_ids = '-1'
+            self.continue_training = False
+            self.checkpoints_dir = './checkpoints'
+            self.logs_dir = './logs'
+            self.format = 'las'
+            self.batch_size=10
+            self.steps=100
+            self.epoch_count=1500
+            self.init_epoch=0
+            self.model_file=None
+            self.optimizer='adam'
+            self.window_size=1
+            self.run_name='test0'
+            self.model='resnet1d'
+            self.datafile='./data/north_sea/train.csv'
+            self.labels='LITHOLOGY_GEOLINK'
+    args = Args()
 
 #%% Setting path to dataset and dataset properties.
 ##########################################################
@@ -91,16 +92,12 @@ data_file = None
 
 if CONTINUE == False:
     FIRST_EPOCH = 1
-    if args.model == '1dcnn':
-        model = define_model.cnn_1d_classifier(len(class_names),len(features),window_size,n_convs=2)
-    elif args.model == 'xgb':
-        model = define_model.xgb_cv_model(verbose=1)
-    elif args.model == 'lstm':
-        model = define_model.lstm_model(len(class_names),len(features),window_size)
-    elif args.model == 'resnet':
-        model = define_model.resnet_1d(len(features),window_size,64,len(class_names))
-    # else:
-    #     model = define_model.cnn_shallow(len(class_names),shape)
+    model = define_model.build_model(
+        args.model,
+        len(class_names),
+        len(features),
+        window_size)
+
     
 elif CONTINUE == True:
     modelfile = args.model_file
@@ -141,6 +138,8 @@ if args.model != 'xgb':
     )
 
     # Metrics logging, still unstable, takes too long on small batch sizes
+    # Currently after each epoch it calculates the metrics for each batch
+    # So on small batch sizes this takes a lot of time
     # metrics = postutils.Metrics(val_data=val_data_gen,batch_size=BATCH_SIZE)
 
     callbacks_list = [ckp_best,csv_log]
