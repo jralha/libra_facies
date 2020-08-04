@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Input, Activation, MaxPooling1D
 from tensorflow.keras.layers import Flatten, Dropout, Dense, LSTM
-from tensorflow.keras.layers import Conv1D, BatchNormalization
+from tensorflow.keras.layers import Conv1D, BatchNormalization, Flatten
 from tensorflow.keras.losses import MeanAbsolutePercentageError
 
 # Fetches the model from the models class with the correct arguments.
@@ -31,7 +31,7 @@ class models():
         try:
             n_conv = self.n_conv
         except:
-            n_conv = 2
+            n_conv = 5
         length = self.length
         num_feats = self.num_feats
         num_classes = self.num_classes
@@ -57,8 +57,11 @@ class models():
         num_classes = self.num_classes
         model = Sequential()
         model.add(Input(shape=(length,num_feats)))
-        model.add(LSTM(100))
+        model.add(LSTM(100,return_sequences=True))
+        model.add(LSTM(100,return_sequences=True))
+        model.add(LSTM(100,return_sequences=True))
         model.add(Dropout(0.5))
+        model.add(Flatten())
         model.add(Dense(num_classes,activation='softmax'))
 
         return model
@@ -161,7 +164,7 @@ class models():
         return model
 
     #XGB model, doesn't use the length, num_classes and num_feats arguments
-    def xgb(params=None,cv=2,verbose=0):
+    def xgb(self, params=None,cv=2,verbose=0):
         import xgboost as xgb
         from sklearn.model_selection import GridSearchCV
 

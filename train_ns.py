@@ -32,7 +32,7 @@ if 'ipykernel' not in sys.argv[0]:
     parser.add_argument('--window_size', type=int, default=1)
 
     parser.add_argument('--run_name', type=str, required=True)
-    parser.add_argument('--model', type=str, default='1dcnn')
+    parser.add_argument('--model', type=str, default='cnn1d')
     parser.add_argument('--datafile', type=str, required=True)
     parser.add_argument('--labels', type=str, required=True)
     args = parser.parse_args()
@@ -147,8 +147,8 @@ if args.model != 'xgb':
     callbacks_list = [ckp_best,csv_log]
 
     #Train or resume training
-    model.fit_generator(
-        generator=train_data_gen,
+    model.fit(
+        x=train_data_gen,
         steps_per_epoch=STEPS_PER_EPOCH,
         epochs=epochs,
         callbacks=callbacks_list,
@@ -161,7 +161,8 @@ if args.model != 'xgb':
 
 # %% XGB model, still needs a way to save results
 if args.model == 'xgb':
-    model.fit(train_data_gen.data,train_data_gen.targets)
+    print('Training XGB Model)')
+    model.fit(train_data_gen.data,train_data_gen.targets,verbose=1)
     pred = model.predict(val_data_gen.data)
     pred_proba = model.predict_proba(val_data_gen.data)
     logloss = log_loss(val_data_gen.targets,pred_proba)
